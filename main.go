@@ -1,56 +1,13 @@
 package main
 
 import (
+	"context"
 	"fmt"
-	"io/ioutil"
-	"net"
-	"net/http"
+	"log"
 	"os"
-	"strings"
 
-	"golang.org/x/net/idna"
+	"github.com/digitalocean/godo"
 )
-
-// Converts given string of domains to punnycode
-func toPunnycode(domains string) ([]string, error) {
-	var punnycode []string
-	for _, d := range strings.Split(domains, ",") {
-		domain, err := idna.ToASCII(d)
-		if err != nil {
-			err = fmt.Errorf("cannot convert domain '%v' to punnycode: %v", d, err)
-			return punnycode, err
-		}
-		punnycode = append(punnycode, domain)
-	}
-
-	return punnycode, nil
-}
-
-// Returns an public IPv4 address of the host
-func publicIP(resolver string) (string, error) {
-	resp, err := http.Get(resolver)
-	if err != nil {
-		return "", err
-	}
-	defer resp.Body.Close()
-
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return "", err
-	}
-
-	ip := strings.TrimSuffix(string(body), "\n")
-	if !isValidIP(ip) {
-		return "", fmt.Errorf("ip address from the resolver is invalid: '%v'", ip)
-	}
-
-	return ip, nil
-}
-
-// Checks if the given IP is valid
-func isValidIP(host string) bool {
-	return net.ParseIP(host) != nil
-}
 
 func main() {
 	// get the token and the domains from the environment
@@ -59,29 +16,74 @@ func main() {
 	resolver := os.Getenv("MYRESOLVER")
 
 	if err != nil {
-		fmt.Printf("Invalid MYDOMAINS env variable: %v. Exiting.\n", err)
-		os.Exit(1)
+		log.Fatalf("ERROR: invalid MYDOMAINS env variable: %v. Exiting.\n", err)
 	} else if token == "" {
-		fmt.Println("Missing MYDOTOKEN env variable. Exiting.")
-		os.Exit(1)
+		log.Fatalln("ERROR: missing the MYDOTOKEN env variable. Exiting.")
 	} else if domains[0] == "" {
-		fmt.Println("Missing MYDODOMAINS env variable. Exiting.")
-		os.Exit(1)
+		log.Fatalln("ERROR: missing the MYDODOMAINS env variable. Exiting.")
 	} else if resolver == "" {
 		resolver = "https://icanhazip.com"
-		fmt.Printf("Missing MYRESOLVER env variable, using '%v' as the resolver.\n", resolver)
+		log.Printf("INFO: missing the MYRESOLVER env variable, using '%v' as the resolver.\n", resolver)
 	}
 
 	// determine the public ip
 	ip, err := publicIP(resolver)
 	if err != nil {
-		fmt.Printf("Cannot determine the public IPv4 address: %v\n", err)
-		os.Exit(1)
+		log.Fatalf("ERROR: cannot determine the public IPv4 address: %v.\n", err)
 	}
 
-	// get all domains
-	// update the domains with the new public ip
+	// update the A records with the new public ip
+	client := godo.NewFromToken(token)
 
-	fmt.Printf("token: %v\ndomains: %v\n", token, domains)
-	fmt.Printf("ip: %v\n", ip)
+	for _, d := range domains {
+		ctx := context.TODO()
+
+		// determine the domain
+		domain, err := getDomain(d)
+		if err != nil {
+			log.Fatalf("ERROR: cannot determine the domain: %v.\n", err)
+		}
+
+		// get an id for the subdomain
+		options := &godo.ListOptions{Page: 1, PerPage: 5000}
+		listRec, listResp, err := client.Domains.Records(ctx, domain, options)
+		if err != nil {
+			log.Fatalf("ERROR: cannot get the subdomain id: err: %v, resp: '%v'.\n", err, listResp)
+		}
+
+		id := 0
+		subdomain := ""
+		data := ""
+		for _, item := range listRec {
+			if fmt.Sprintf("%v.%v", item.Name, domain) == d {
+				id = item.ID
+				subdomain = item.Name
+				data = item.Data
+			}
+		}
+
+		// update the subdomain, if needed
+		decoded, err := fromPunnycode(d)
+		if err != nil {
+			decoded = d
+		}
+		if ip != data {
+			updateReq := &godo.DomainRecordEditRequest{
+				Type: "A",
+				Name: subdomain,
+				Data: ip,
+				TTL:  60,
+			}
+
+			_, resp, err := client.Domains.EditRecord(ctx, domain, id, updateReq)
+
+			if err != nil {
+				log.Fatalf("ERROR: cannot update the A record: err: %v, resp: '%v'.\n", err, resp)
+			} else {
+				log.Printf("INFO: updated the IP for the A record '%v'.\n", decoded)
+			}
+		} else {
+			log.Printf("INFO: the A record '%v' is up to date. Skipping.\n", decoded)
+		}
+	}
 }

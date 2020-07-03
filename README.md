@@ -8,4 +8,4 @@ The dynamic-do-dns program will (on every run) check what is the current public 
     go build
 
 ## Usage
-    MYDOTOKEN="<YOUR-DO-TOKEN"> MYDOMAINS="<COMMA-SEPARATED-LIST-OF-A-RECORDS" ./dynamic-do-dns
+    MYDOTOKEN="<YOUR-DO-TOKEN"> MYDOMAINS="<COMMA-SEPARATED-LIST-OF-A-RECORDS" MYRESOLVER="https://icanhazip.com" ./dynamic-do-dns
