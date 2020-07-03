@@ -68,8 +68,8 @@ func main() {
 		fmt.Println("Missing MYDODOMAINS env variable. Exiting.")
 		os.Exit(1)
 	} else if resolver == "" {
-		fmt.Println("Missing MYRESOLVER env variable. Exiting.")
-		os.Exit(1)
+		resolver = "https://icanhazip.com"
+		fmt.Printf("Missing MYRESOLVER env variable, using '%v' as the resolver.\n", resolver)
 	}
 
 	// determine the public ip
