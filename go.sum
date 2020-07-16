@@ -8,6 +8,8 @@ github.com/digitalocean/godo v1.38.0 h1:to+pLe5RJqflJiyxhaLJfJgT3YzwHRSg19mOWkKt
 github.com/digitalocean/godo v1.38.0/go.mod h1:p7dOjjtSBqCTUksqtA5Fd3uaKs9kyTq2xcz76ulEJRU=
 github.com/digitalocean/godo v1.39.0 h1:NEEo72agChFhmrNeXWyV0/W9nQozBE00Gtx+4Jhxb7E=
 github.com/digitalocean/godo v1.39.0/go.mod h1:p7dOjjtSBqCTUksqtA5Fd3uaKs9kyTq2xcz76ulEJRU=
+github.com/digitalocean/godo v1.40.0 h1:bbZOnzFyZX6ylSHjWHGOm5HjLl5zfZpJBRe9jWD0sb0=
+github.com/digitalocean/godo v1.40.0/go.mod h1:p7dOjjtSBqCTUksqtA5Fd3uaKs9kyTq2xcz76ulEJRU=
 github.com/envoyproxy/go-control-plane v0.9.1-0.20191026205805-5f8ba28d4473/go.mod h1:YTl/9mNaCwkRvm6d1a2C3ymFceY/DCBVvsKhRF0iEA4=
 github.com/envoyproxy/protoc-gen-validate v0.1.0/go.mod h1:iSmxcyjqTsJpI2R4NaDN7+kN2VEUnK/pcBlmesArF7c=
 github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b/go.mod h1:SBH7ygxi8pfUlaOkMMuAQtPIUF8ecWP5IEl/CR7VP2Q=
