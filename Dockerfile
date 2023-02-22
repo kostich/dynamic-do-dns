@@ -1,4 +1,4 @@
-FROM golang:1.15
+FROM golang:1.19
 WORKDIR /app
 ARG ARCH=
 ARG GOOS="linux"
